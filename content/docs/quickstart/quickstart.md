@@ -31,7 +31,7 @@ python setup.py install
 
 IRT response data should be stored in a 2D [numpy](https://numpy.org/) array.  This array holds the measured responses with the number of rows (vertical) equal to the number of items in the test, and the number of columns (horizontal) equal to the number of participants in the test.
 
-{{< figure src="/images/girth_data.jpg" width=200 height=300 title="Array Format" >}}
+{{< figure src="/girth/images/girth_data.jpg" width="80%" title="Example girth array layout" >}}
 
 It is up to the user to manipulate the data into this standardized format.
 
