@@ -9,6 +9,9 @@
 echo "Removing existing files"
 rm -rf public/*
 
+echo "Building Documentation"
+python make_documentation.py
+
 echo "Generating site"
 hugo --minify
 
