@@ -1,5 +1,6 @@
 ---
 title: API
+type: docs
 menu:
   main:
     weight: 40
