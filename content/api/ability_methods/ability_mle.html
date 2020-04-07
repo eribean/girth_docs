@@ -39,8 +39,8 @@ defaults to numpy.nan, if a number is used then
 </dl>
 <h2 id="returns" >Returns</h2>
 <dl >
-<dt ><code >1d</code> <code >array</code> of <code >estimated</code> <code >abilities</code></dt>
-<dd >&nbsp;</dd>
+<dt ><strong ><code >abilities</code></strong></dt>
+<dd >(1d array) estimated abilities</dd>
 </dl></section>
 <details class="source" >
 <summary >
@@ -62,7 +62,7 @@ defaults to numpy.nan, if a number is used then
                      -no_estimate -&gt; 0 and no_estimate -&gt; 1
 
     Returns:
-        1d array of estimated abilities
+        abilities: (1d array) estimated abilities
     &#34;&#34;&#34;
     # Locations where endorsement isn&#39;t constant
     mask = np.nanvar(dataset, axis=0) &gt; 0
@@ -72,7 +72,7 @@ defaults to numpy.nan, if a number is used then
 
     # Call MAP with uniform distribution
     trimmed_theta = ability_map(valid_dataset, difficulty, discrimination,
-                                uniform(-7, 14).pdf)
+                                {&#39;distribution&#39;: uniform(-7, 14).pdf})
 
     # Replace no_estimate values
     thetas = np.full((dataset.shape[1],), np.abs(no_estimate), dtype=&#39;float&#39;)

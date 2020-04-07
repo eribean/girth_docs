@@ -16,43 +16,53 @@ type: docs
 
 <dl >
 <dt id="girth.mml_full_methods.rasch_full" ><code class="name flex" >
-<span >def <span class="ident" >rasch_full</span></span>(<span >dataset, discrimination=1, max_iter=25)</span>
+<span >def <span class="ident" >rasch_full</span></span>(<span >dataset, discrimination=1, options=None)</span>
 </code></dt>
 <dd >
-<section class="desc" ><p >Estimates parameters in an IRT model with full
-gaussian quadrature</p>
+<section class="desc" ><p >Estimates difficulty parameters in Rash IRT model.</p>
 <h2 id="args" >Args</h2>
 <dl >
 <dt ><strong ><code >dataset</code></strong></dt>
 <dd >[items x participants] matrix of True/False Values</dd>
 <dt ><strong ><code >discrimination</code></strong></dt>
 <dd >scalar of discrimination used in model (default to 1)</dd>
-<dt ><strong ><code >max_iter</code></strong></dt>
-<dd >maximum number of iterations to run</dd>
+<dt ><strong ><code >options</code></strong></dt>
+<dd >dictionary with updates to default options</dd>
 </dl>
 <h2 id="returns" >Returns</h2>
 <dl >
-<dt ><code >array</code> of <code >discrimination</code> <code >estimates</code></dt>
-<dd >&nbsp;</dd>
-</dl></section>
+<dt ><strong ><code >difficulty</code></strong></dt>
+<dd >(1d array) difficulty estimates</dd>
+</dl>
+<h2 id="options" >Options</h2>
+<ul >
+<li >max_iteration: int</li>
+<li >distribution: callable</li>
+<li >quadrature_bounds: (float, float)</li>
+<li >quadrature_n: int</li>
+</ul></section>
 <details class="source" >
 <summary >
 <span >Expand source code</span>
 </summary>
-<pre ><code class="python" >def rasch_full(dataset, discrimination=1, max_iter=25):
-    &#34;&#34;&#34;
-        Estimates parameters in an IRT model with full
-        gaussian quadrature
+<pre ><code class="python" >def rasch_full(dataset, discrimination=1, options=None):
+    &#34;&#34;&#34; Estimates difficulty parameters in Rash IRT model.
 
-        Args:
-            dataset: [items x participants] matrix of True/False Values
-            discrimination: scalar of discrimination used in model (default to 1)
-            max_iter: maximum number of iterations to run
+    Args:
+        dataset: [items x participants] matrix of True/False Values
+        discrimination: scalar of discrimination used in model (default to 1)
+        options: dictionary with updates to default options
 
-        Returns:
-            array of discrimination estimates
+    Returns:
+        difficulty: (1d array) difficulty estimates
+
+    Options:
+        * max_iteration: int
+        * distribution: callable
+        * quadrature_bounds: (float, float)
+        * quadrature_n: int
     &#34;&#34;&#34;
-    return onepl_full(dataset, alpha=discrimination, max_iter=max_iter)[1]</code></pre>
+    return onepl_full(dataset, alpha=discrimination, options=options)[1]</code></pre>
 </details>
 </dd>
 </dl>

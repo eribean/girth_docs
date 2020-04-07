@@ -16,7 +16,7 @@ type: docs
 
 <dl >
 <dt id="girth.ability_methods.ability_eap" ><code class="name flex" >
-<span >def <span class="ident" >ability_eap</span></span>(<span >dataset, difficulty, discrimination, distribution=None)</span>
+<span >def <span class="ident" >ability_eap</span></span>(<span >dataset, difficulty, discrimination, options=None)</span>
 </code></dt>
 <dd >
 <section class="desc" ><p >Estimates the abilities for dichotomous models.</p>
@@ -30,20 +30,25 @@ expaected a posterior likelihood estimation.</p>
 <dd >(1d Array) of difficulty parameters for each item</dd>
 <dt ><strong ><code >discrimination</code></strong></dt>
 <dd >(1d Array) of disrimination parameters for each item</dd>
-<dt ><strong ><code >distribution</code></strong></dt>
-<dd >function handle to PDF of ability distribution, p = f(theta)
-the default is gaussian (i.e: scipy.stats.norm(0, 1).pdf)</dd>
+<dt ><strong ><code >options</code></strong></dt>
+<dd >dictionary with updates to default options</dd>
 </dl>
 <h2 id="returns" >Returns</h2>
 <dl >
-<dt ><code >1d</code> <code >array</code> of <code >estimated</code> <code >abilities</code></dt>
-<dd >&nbsp;</dd>
-</dl></section>
+<dt ><strong ><code >abilities</code></strong></dt>
+<dd >(1d array) estimated abilities</dd>
+</dl>
+<h2 id="options" >Options</h2>
+<ul >
+<li >distribution: callable</li>
+<li >quadrature_bounds: (float, float)</li>
+<li >quadrature_n: int</li>
+</ul></section>
 <details class="source" >
 <summary >
 <span >Expand source code</span>
 </summary>
-<pre ><code class="python" >def ability_eap(dataset, difficulty, discrimination, distribution=None):
+<pre ><code class="python" >def ability_eap(dataset, difficulty, discrimination, options=None):
     &#34;&#34;&#34;Estimates the abilities for dichotomous models.
 
     Estimates the ability parameters (theta) for dichotomous models via
@@ -53,35 +58,43 @@ the default is gaussian (i.e: scipy.stats.norm(0, 1).pdf)</dd>
         dataset: [n_items, n_participants] (2d Array) of measured responses
         difficulty: (1d Array) of difficulty parameters for each item
         discrimination: (1d Array) of disrimination parameters for each item
-        distribution: function handle to PDF of ability distribution, p = f(theta)
-                      the default is gaussian (i.e: scipy.stats.norm(0, 1).pdf)
+        options: dictionary with updates to default options
 
     Returns:
-        1d array of estimated abilities
-    &#34;&#34;&#34;
-    if distribution is None:
-        distribution = gaussian(0, 1).pdf
+        abilities: (1d array) estimated abilities
 
-    discrimination = np.atleast_1d(discrimination)
-    if discrimination.size == 1:
-        discrimination = np.full(dataset.shape[0], discrimination)
+    Options:
+        * distribution: callable
+        * quadrature_bounds: (float, float)
+        * quadrature_n: int
+
+    &#34;&#34;&#34;
+    options = validate_estimation_options(options)
+    quad_start, quad_stop = options[&#39;quadrature_bounds&#39;]
+    quad_n = options[&#39;quadrature_n&#39;]
+
+    if np.atleast_1d(discrimination).size == 1:
+        discrimination = np.full(dataset.shape[0], discrimination,
+                                 dtype=&#39;float&#39;)
 
     the_sign = convert_responses_to_kernel_sign(dataset)
 
-    theta = _get_quadrature_points(61, -5, 5)
+    theta = _get_quadrature_points(quad_n, quad_start, quad_stop)
     partial_int = _compute_partial_integral(
         theta, difficulty, discrimination, the_sign)
 
     # Weight by the input ability distribution
-    partial_int *= distribution(theta)
+    partial_int *= options[&#39;distribution&#39;](theta)
 
     # Compute the denominator
-    denominator = integrate.fixed_quad(lambda x: partial_int, -5, 5, n=61)[0]
+    denominator = integrate.fixed_quad(
+        lambda x: partial_int, quad_start, quad_stop, n=quad_n)[0]
 
     # compute the numerator
     partial_int *= theta
 
-    numerator = integrate.fixed_quad(lambda x: partial_int, -5, 5, n=61)[0]
+    numerator = integrate.fixed_quad(
+        lambda x: partial_int, quad_start, quad_stop, n=quad_n)[0]
 
     return numerator / denominator</code></pre>
 </details>

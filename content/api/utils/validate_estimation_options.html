@@ -1,6 +1,6 @@
 ---
-title: ability_map
-linkTitle: ability_map
+title: validate_estimation_options
+linkTitle: validate_estimation_options
 weight: 2
 type: docs
 ---
@@ -15,89 +15,61 @@ type: docs
 <section >
 
 <dl >
-<dt id="girth.ability_methods.ability_map" ><code class="name flex" >
-<span >def <span class="ident" >ability_map</span></span>(<span >dataset, difficulty, discrimination, options=None)</span>
+<dt id="girth.utils.validate_estimation_options" ><code class="name flex" >
+<span >def <span class="ident" >validate_estimation_options</span></span>(<span >options_dict=None)</span>
 </code></dt>
 <dd >
-<section class="desc" ><p >Estimates the abilities for dichotomous models.</p>
-<p >Estimates the ability parameters (theta) for dichotomous models via
-maximum a posterior likelihood estimation.</p>
+<section class="desc" ><p >Validates an options dictionary.</p>
 <h2 id="args" >Args</h2>
 <dl >
-<dt ><strong ><code >dataset</code></strong></dt>
-<dd >[n_items, n_participants] (2d Array) of measured responses</dd>
-<dt ><strong ><code >difficulty</code></strong></dt>
-<dd >(1d Array) of difficulty parameters for each item</dd>
-<dt ><strong ><code >discrimination</code></strong></dt>
-<dd >(1d Array) of disrimination parameters for each item</dd>
-<dt ><strong ><code >options</code></strong></dt>
-<dd >dictionary with updates to default options</dd>
+<dt ><strong ><code >options_dict</code></strong></dt>
+<dd >Dictionary with updates to default_values</dd>
 </dl>
 <h2 id="returns" >Returns</h2>
 <dl >
-<dt ><strong ><code >abilities</code></strong></dt>
-<dd >(1d array) estimated abilities</dd>
-</dl>
-<h2 id="options" >Options</h2>
-<dl >
-<dt ><strong ><code >distribution</code></strong></dt>
-<dd >&nbsp;</dd>
-</dl>
-<h2 id="notes" >Notes</h2>
-<p >If distribution is uniform, please use ability_mle instead. A large set
-of probability distributions can be found in scipy.stats
-<a href="https://docs.scipy.org/doc/scipy/reference/stats.html" >https://docs.scipy.org/doc/scipy/reference/stats.html</a></p></section>
+<dt ><strong ><code >options_dict</code></strong></dt>
+<dd >Updated dictionary</dd>
+</dl></section>
 <details class="source" >
 <summary >
 <span >Expand source code</span>
 </summary>
-<pre ><code class="python" >def ability_map(dataset, difficulty, discrimination, options=None):
-    &#34;&#34;&#34;Estimates the abilities for dichotomous models.
-
-    Estimates the ability parameters (theta) for dichotomous models via
-    maximum a posterior likelihood estimation.
+<pre ><code class="python" >def validate_estimation_options(options_dict=None):
+    &#34;&#34;&#34;Validates an options dictionary.
 
     Args:
-        dataset: [n_items, n_participants] (2d Array) of measured responses
-        difficulty: (1d Array) of difficulty parameters for each item
-        discrimination: (1d Array) of disrimination parameters for each item
-        options: dictionary with updates to default options
+        options_dict: Dictionary with updates to default_values
 
     Returns:
-        abilities: (1d array) estimated abilities
+        options_dict: Updated dictionary
 
-    Options:
-        distribution: 
-
-    Notes:
-        If distribution is uniform, please use ability_mle instead. A large set 
-        of probability distributions can be found in scipy.stats
-        https://docs.scipy.org/doc/scipy/reference/stats.html
     &#34;&#34;&#34;
-    options = validate_estimation_options(options)
-    distribution = options[&#39;distribution&#39;]
+    validate = {&#39;max_iteration&#39;:
+                    lambda x: isinstance(x, int) and x &gt; 0,
+                &#39;distribution&#39;:
+                    callable,
+                &#39;quadrature_bounds&#39;:
+                    lambda x: isinstance(x, (tuple, list)) and (x[1] &gt; x[0]),
+                &#39;quadrature_n&#39;:
+                    lambda x: isinstance(x, int) and x &gt; 7}
+    
+    # A complete options dictionary
+    full_options = default_options()
+    
+    if options_dict:
+        if not isinstance(options_dict, dict):
+            raise AssertionError(&#34;Options must be a dictionary got: &#34;
+                                f&#34;{type(options_dict)}.&#34;)
 
-    if np.atleast_1d(discrimination).size == 1:
-        discrimination = np.full(dataset.shape[0], discrimination,
-                                 dtype=&#34;float&#34;)
+        for key, value in options_dict.items():
+            if not validate[key](value):
+                raise AssertionError(&#34;Unexpected key-value pair: &#34;
+                                     f&#34;{key}: {value}. Please see &#34;
+                                     &#34;documentation for expected inputs.&#34;)
 
-    n_takers = dataset.shape[1]
-    the_sign = convert_responses_to_kernel_sign(dataset)
-    thetas = np.zeros((n_takers,))
+        full_options.update(options_dict)
 
-    for ndx in range(n_takers):
-        # pylint: disable=cell-var-from-loop
-        scalar = the_sign[:, ndx] * discrimination
-
-        def _theta_min(theta):
-            otpt = 1.0 / (1.0 + np.exp(scalar * (theta - difficulty)))
-
-            return -(np.log(otpt).sum() + np.log(distribution(theta)))
-
-        # Solves for the ability for each person
-        thetas[ndx] = fminbound(_theta_min, -6, 6)
-
-    return thetas</code></pre>
+    return full_options</code></pre>
 </details>
 </dd>
 </dl>

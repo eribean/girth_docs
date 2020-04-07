@@ -1,7 +1,7 @@
 ---
 title: trim_response_set_and_counts
 linkTitle: trim_response_set_and_counts
-weight: 4
+weight: 6
 type: docs
 ---
 <head>
@@ -50,7 +50,7 @@ numpy.unique</dd>
             response_set, counts updated to reflect removal of response patterns
     &#34;&#34;&#34;
     # Remove response sets where output is all true/false
-    mask  = ~(np.nanvar(response_sets, axis=0) == 0)
+    mask = ~(np.nanvar(response_sets, axis=0) == 0)
     response_sets = response_sets[:, mask]
     counts = counts[mask]
 

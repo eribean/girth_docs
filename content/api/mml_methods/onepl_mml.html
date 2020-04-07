@@ -16,39 +16,57 @@ type: docs
 
 <dl >
 <dt id="girth.mml_methods.onepl_mml" ><code class="name flex" >
-<span >def <span class="ident" >onepl_mml</span></span>(<span >dataset, alpha=None)</span>
+<span >def <span class="ident" >onepl_mml</span></span>(<span >dataset, alpha=None, options=None)</span>
 </code></dt>
 <dd >
-<section class="desc" ><p >Estimates the difficulty and single discrimination parameter</p>
-<p >Separates the difficulty estimation from the discrimination
-parameters</p>
+<section class="desc" ><p >Estimates parameters in an 1PL IRT Model.</p>
 <h2 id="args" >Args</h2>
 <dl >
 <dt ><strong ><code >dataset</code></strong></dt>
 <dd >[items x participants] matrix of True/False Values</dd>
+<dt ><strong ><code >alpha</code></strong></dt>
+<dd >[int] discrimination constraint</dd>
+<dt ><strong ><code >options</code></strong></dt>
+<dd >dictionary with updates to default options</dd>
 </dl>
 <h2 id="returns" >Returns</h2>
 <dl >
-<dt ><code >array</code> of <code >discrimination</code>, <code >difficulty</code> <code >estimates</code></dt>
-<dd >&nbsp;</dd>
-</dl></section>
+<dt ><strong ><code >discrimination</code></strong></dt>
+<dd >(float) estimate of test discrimination</dd>
+<dt ><strong ><code >difficulty</code></strong></dt>
+<dd >(1d array) estimates of item diffiulties</dd>
+</dl>
+<h2 id="options" >Options</h2>
+<ul >
+<li >distribution: callable</li>
+<li >quadrature_bounds: (float, float)</li>
+<li >quadrature_n: int</li>
+</ul></section>
 <details class="source" >
 <summary >
 <span >Expand source code</span>
 </summary>
-<pre ><code class="python" >def onepl_mml(dataset, alpha=None):
+<pre ><code class="python" >def onepl_mml(dataset, alpha=None, options=None):
+    &#34;&#34;&#34; Estimates parameters in an 1PL IRT Model.
+
+    Args:
+        dataset: [items x participants] matrix of True/False Values
+        alpha: [int] discrimination constraint
+        options: dictionary with updates to default options
+
+    Returns:
+        discrimination: (float) estimate of test discrimination
+        difficulty: (1d array) estimates of item diffiulties
+
+    Options:
+        * distribution: callable
+        * quadrature_bounds: (float, float)
+        * quadrature_n: int
     &#34;&#34;&#34;
-        Estimates the difficulty and single discrimination parameter
+    options = validate_estimation_options(options)
+    quad_start, quad_stop = options[&#39;quadrature_bounds&#39;]
+    quad_n = options[&#39;quadrature_n&#39;]
 
-        Separates the difficulty estimation from the discrimination
-        parameters
-
-        Args:
-            dataset: [items x participants] matrix of True/False Values
-
-        Returns:
-            array of discrimination, difficulty estimates
-    &#34;&#34;&#34;
     # Difficulty Estimation parameters
     n_items = dataset.shape[0]
     n_no, n_yes = get_true_false_counts(dataset)
@@ -61,21 +79,22 @@ parameters</p>
     difficulty = np.zeros((n_items,))
 
     # Quadrature Locations
-    theta = _get_quadrature_points(61, -5, 5)
-    distribution = stats.norm(0, 1).pdf(theta)
+    theta = _get_quadrature_points(quad_n, quad_start, quad_stop)
+    distribution = options[&#39;distribution&#39;](theta)
 
     # Inline definition of cost function to minimize
     def min_func(estimate):
         discrimination[:] = estimate
         _mml_abstract(difficulty, scalar, discrimination,
-                           theta, distribution)
+                      theta, distribution, options)
 
         partial_int = _compute_partial_integral(theta, difficulty,
                                                 discrimination, the_sign)
 
         # add distribution
         partial_int *= distribution
-        otpt = integrate.fixed_quad(lambda x: partial_int, -5, 5, n=61)[0]
+        otpt = integrate.fixed_quad(
+            lambda x: partial_int, quad_start, quad_stop, n=quad_n)[0]
 
         return -np.log(otpt).dot(counts)
 

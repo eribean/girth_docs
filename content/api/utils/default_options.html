@@ -1,7 +1,7 @@
 ---
-title: ability_map
-linkTitle: ability_map
-weight: 2
+title: default_options
+linkTitle: default_options
+weight: 1
 type: docs
 ---
 <head>
@@ -15,89 +15,48 @@ type: docs
 <section >
 
 <dl >
-<dt id="girth.ability_methods.ability_map" ><code class="name flex" >
-<span >def <span class="ident" >ability_map</span></span>(<span >dataset, difficulty, discrimination, options=None)</span>
+<dt id="girth.utils.default_options" ><code class="name flex" >
+<span >def <span class="ident" >default_options</span></span>(<span >)</span>
 </code></dt>
 <dd >
-<section class="desc" ><p >Estimates the abilities for dichotomous models.</p>
-<p >Estimates the ability parameters (theta) for dichotomous models via
-maximum a posterior likelihood estimation.</p>
+<section class="desc" ><p >Dictionary of options used in Girth.</p>
 <h2 id="args" >Args</h2>
 <dl >
-<dt ><strong ><code >dataset</code></strong></dt>
-<dd >[n_items, n_participants] (2d Array) of measured responses</dd>
-<dt ><strong ><code >difficulty</code></strong></dt>
-<dd >(1d Array) of difficulty parameters for each item</dd>
-<dt ><strong ><code >discrimination</code></strong></dt>
-<dd >(1d Array) of disrimination parameters for each item</dd>
-<dt ><strong ><code >options</code></strong></dt>
-<dd >dictionary with updates to default options</dd>
-</dl>
-<h2 id="returns" >Returns</h2>
-<dl >
-<dt ><strong ><code >abilities</code></strong></dt>
-<dd >(1d array) estimated abilities</dd>
-</dl>
-<h2 id="options" >Options</h2>
-<dl >
+<dt ><strong ><code >max_iteration</code></strong></dt>
+<dd >[int] maximum number of iterations
+allowed during processing. (Default = 25)</dd>
 <dt ><strong ><code >distribution</code></strong></dt>
-<dd >&nbsp;</dd>
-</dl>
-<h2 id="notes" >Notes</h2>
-<p >If distribution is uniform, please use ability_mle instead. A large set
-of probability distributions can be found in scipy.stats
-<a href="https://docs.scipy.org/doc/scipy/reference/stats.html" >https://docs.scipy.org/doc/scipy/reference/stats.html</a></p></section>
+<dd >[callable] function that returns a pdf
+evaluated at quadrature points, p = f(theta).
+(Default = scipy.stats.norm(0, 1).pdf)</dd>
+<dt ><strong ><code >quadrature_bounds</code></strong></dt>
+<dd >(lower, upper) bounds to limit
+numerical integration. Default = (-5, 5)</dd>
+<dt ><strong ><code >quadrature_n</code></strong></dt>
+<dd >[int] number of quadrature points to use
+Default = 61</dd>
+</dl></section>
 <details class="source" >
 <summary >
 <span >Expand source code</span>
 </summary>
-<pre ><code class="python" >def ability_map(dataset, difficulty, discrimination, options=None):
-    &#34;&#34;&#34;Estimates the abilities for dichotomous models.
-
-    Estimates the ability parameters (theta) for dichotomous models via
-    maximum a posterior likelihood estimation.
-
-    Args:
-        dataset: [n_items, n_participants] (2d Array) of measured responses
-        difficulty: (1d Array) of difficulty parameters for each item
-        discrimination: (1d Array) of disrimination parameters for each item
-        options: dictionary with updates to default options
-
-    Returns:
-        abilities: (1d array) estimated abilities
-
-    Options:
-        distribution: 
-
-    Notes:
-        If distribution is uniform, please use ability_mle instead. A large set 
-        of probability distributions can be found in scipy.stats
-        https://docs.scipy.org/doc/scipy/reference/stats.html
+<pre ><code class="python" >def default_options():
+    &#34;&#34;&#34; Dictionary of options used in Girth.
+        Args:
+            max_iteration: [int] maximum number of iterations
+                allowed during processing. (Default = 25)
+            distribution: [callable] function that returns a pdf
+                evaluated at quadrature points, p = f(theta).
+                (Default = scipy.stats.norm(0, 1).pdf)
+            quadrature_bounds: (lower, upper) bounds to limit
+                numerical integration. Default = (-5, 5)
+            quadrature_n: [int] number of quadrature points to use
+                          Default = 61
     &#34;&#34;&#34;
-    options = validate_estimation_options(options)
-    distribution = options[&#39;distribution&#39;]
-
-    if np.atleast_1d(discrimination).size == 1:
-        discrimination = np.full(dataset.shape[0], discrimination,
-                                 dtype=&#34;float&#34;)
-
-    n_takers = dataset.shape[1]
-    the_sign = convert_responses_to_kernel_sign(dataset)
-    thetas = np.zeros((n_takers,))
-
-    for ndx in range(n_takers):
-        # pylint: disable=cell-var-from-loop
-        scalar = the_sign[:, ndx] * discrimination
-
-        def _theta_min(theta):
-            otpt = 1.0 / (1.0 + np.exp(scalar * (theta - difficulty)))
-
-            return -(np.log(otpt).sum() + np.log(distribution(theta)))
-
-        # Solves for the ability for each person
-        thetas[ndx] = fminbound(_theta_min, -6, 6)
-
-    return thetas</code></pre>
+    return {&#34;max_iteration&#34;: 25,
+            &#34;distribution&#34;: gaussian(0, 1).pdf,
+            &#34;quadrature_bounds&#34;: (-5, 5),
+            &#34;quadrature_n&#34;: 61}</code></pre>
 </details>
 </dd>
 </dl>

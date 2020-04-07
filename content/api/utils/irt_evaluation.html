@@ -1,7 +1,7 @@
 ---
 title: irt_evaluation
 linkTitle: irt_evaluation
-weight: 5
+weight: 7
 type: docs
 ---
 <head>
@@ -62,8 +62,9 @@ P(theta) = 1.0 / (1 + exp(discrimination * (theta - difficulty)))</p>
             synthetic data
     &#34;&#34;&#34;
     # If discrimination is a scalar, make it an array
-    if not np.ndim(discrimination):
-        discrimination = np.ones_like(difficulty) * discrimination
+    if np.atleast_1d(discrimination).size == 1:
+        discrimination = np.full_like(difficulty, discrimination,
+                                      dtype=&#39;float&#39;)
 
     kernel = difficulty[:, None] - thetas
     kernel *= discrimination[:, None]

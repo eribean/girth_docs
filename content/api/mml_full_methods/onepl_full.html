@@ -16,10 +16,10 @@ type: docs
 
 <dl >
 <dt id="girth.mml_full_methods.onepl_full" ><code class="name flex" >
-<span >def <span class="ident" >onepl_full</span></span>(<span >dataset, alpha=None, max_iter=25)</span>
+<span >def <span class="ident" >onepl_full</span></span>(<span >dataset, alpha=None, options=None)</span>
 </code></dt>
 <dd >
-<section class="desc" ><p >Estimates parameters in an 1PL IRT Model</p>
+<section class="desc" ><p >Estimates parameters in an 1PL IRT Model.</p>
 <p >This function is slow, please use onepl_mml</p>
 <h2 id="args" >Args</h2>
 <dl >
@@ -27,43 +27,62 @@ type: docs
 <dd >[items x participants] matrix of True/False Values</dd>
 <dt ><strong ><code >alpha</code></strong></dt>
 <dd >scalar of discrimination used in model (default to 1)</dd>
-<dt ><strong ><code >max_iter</code></strong></dt>
-<dd >maximum number of iterations to run</dd>
+<dt ><strong ><code >options</code></strong></dt>
+<dd >dictionary with updates to default options</dd>
 </dl>
 <h2 id="returns" >Returns</h2>
 <dl >
-<dt ><code >array</code> of <code >discrimination</code> <code >estimates</code></dt>
-<dd >&nbsp;</dd>
+<dt ><strong ><code >discrimination</code></strong></dt>
+<dd >(float) estimate of test discrimination</dd>
+<dt ><strong ><code >difficulty</code></strong></dt>
+<dd >(1d array) estimates of item diffiulties</dd>
 </dl>
+<h2 id="options" >Options</h2>
+<ul >
+<li >max_iteration: int</li>
+<li >distribution: callable</li>
+<li >quadrature_bounds: (float, float)</li>
+<li >quadrature_n: int</li>
+</ul>
 <h2 id="notes" >Notes</h2>
 <p >If alpha is supplied then this solves a Rasch model</p></section>
 <details class="source" >
 <summary >
 <span >Expand source code</span>
 </summary>
-<pre ><code class="python" >def onepl_full(dataset, alpha=None, max_iter=25):
+<pre ><code class="python" >def onepl_full(dataset, alpha=None, options=None):
+    &#34;&#34;&#34; Estimates parameters in an 1PL IRT Model.
+
+    This function is slow, please use onepl_mml
+
+    Args:
+        dataset: [items x participants] matrix of True/False Values
+        alpha: scalar of discrimination used in model (default to 1)
+        options: dictionary with updates to default options
+
+    Returns:
+        discrimination: (float) estimate of test discrimination
+        difficulty: (1d array) estimates of item diffiulties
+
+    Options:
+        * max_iteration: int
+        * distribution: callable
+        * quadrature_bounds: (float, float)
+        * quadrature_n: int
+
+    Notes:
+        If alpha is supplied then this solves a Rasch model
     &#34;&#34;&#34;
-        Estimates parameters in an 1PL IRT Model
+    options = validate_estimation_options(options)
+    quad_start, quad_stop = options[&#39;quadrature_bounds&#39;]
+    quad_n = options[&#39;quadrature_n&#39;]
 
-        This function is slow, please use onepl_mml
-
-        Args:
-            dataset: [items x participants] matrix of True/False Values
-            alpha: scalar of discrimination used in model (default to 1)
-            max_iter: maximum number of iterations to run
-
-        Returns:
-            array of discrimination estimates
-        
-        Notes:
-            If alpha is supplied then this solves a Rasch model
-    &#34;&#34;&#34;
     n_items = dataset.shape[0]
     unique_sets, counts = np.unique(dataset, axis=1, return_counts=True)
     the_sign = convert_responses_to_kernel_sign(unique_sets)
 
-    theta = _get_quadrature_points(61, -5, 5)
-    distribution = stats.norm(0, 1).pdf(theta)
+    theta = _get_quadrature_points(quad_n, quad_start, quad_stop)
+    distribution = options[&#39;distribution&#39;](theta)
 
     discrimination = np.ones((n_items,))
     difficulty = np.zeros((n_items,))
@@ -71,7 +90,7 @@ type: docs
     def alpha_min_func(alpha_estimate):
         discrimination[:] = alpha_estimate
 
-        for iteration in range(max_iter):
+        for iteration in range(options[&#39;max_iteration&#39;]):
             previous_difficulty = difficulty.copy()
 
             # Quadrature evaluation for values that do not change
@@ -99,7 +118,7 @@ type: docs
                     estimate_int *= partial_int
 
                     otpt = integrate.fixed_quad(
-                        lambda x: estimate_int, -5, 5, n=61)[0]
+                        lambda x: estimate_int, quad_start, quad_stop, n=quad_n)[0]
 
                     return -np.log(otpt).dot(counts)
 
@@ -115,7 +134,8 @@ type: docs
             if(np.abs(previous_difficulty - difficulty).max() &lt; 1e-3):
                 break
 
-        cost = integrate.fixed_quad(lambda x: partial_int, -5, 5, n=61)[0]
+        cost = integrate.fixed_quad(
+            lambda x: partial_int, quad_start, quad_stop, n=quad_n)[0]
         return -np.log(cost).dot(counts)
 
     if alpha is None:  # OnePl Solver

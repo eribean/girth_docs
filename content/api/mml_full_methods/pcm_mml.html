@@ -16,7 +16,7 @@ type: docs
 
 <dl >
 <dt id="girth.mml_full_methods.pcm_mml" ><code class="name flex" >
-<span >def <span class="ident" >pcm_mml</span></span>(<span >dataset, max_iter=25)</span>
+<span >def <span class="ident" >pcm_mml</span></span>(<span >dataset, options=None)</span>
 </code></dt>
 <dd >
 <section class="desc" ><p >Estimate parameters for partial credit model.</p>
@@ -26,21 +26,28 @@ the partial credit model using marginal maximum likelihood.</p>
 <dl >
 <dt ><strong ><code >dataset</code></strong></dt>
 <dd >[n_items, n_participants] 2d array of measured responses</dd>
-<dt ><strong ><code >max_iter</code></strong></dt>
-<dd >(optional) maximum number of iterations to perform</dd>
+<dt ><strong ><code >options</code></strong></dt>
+<dd >dictionary with updates to default options</dd>
 </dl>
 <h2 id="returns" >Returns</h2>
 <dl >
-<dt ><code >array</code> of <code >discrimination</code> <code >parameters</code></dt>
-<dd >&nbsp;</dd>
-<dt ><code >2d</code> <code >array</code> of <code >difficulty</code> <code >parameters</code>, (<code >NAN</code> <code >represents</code> <code >non</code> <code >response</code>)</dt>
-<dd >&nbsp;</dd>
-</dl></section>
+<dt ><strong ><code >discrimination</code></strong></dt>
+<dd >(1d array) estimates of item discrimination</dd>
+<dt ><strong ><code >difficulty</code></strong></dt>
+<dd >(2d array) estimates of item difficulties x item thresholds</dd>
+</dl>
+<h2 id="options" >Options</h2>
+<ul >
+<li >max_iteration: int</li>
+<li >distribution: callable</li>
+<li >quadrature_bounds: (float, float)</li>
+<li >quadrature_n: int</li>
+</ul></section>
 <details class="source" >
 <summary >
 <span >Expand source code</span>
 </summary>
-<pre ><code class="python" >def pcm_mml(dataset, max_iter=25):
+<pre ><code class="python" >def pcm_mml(dataset, options=None):
     &#34;&#34;&#34;Estimate parameters for partial credit model.
 
     Estimate the discrimination and difficulty parameters for
@@ -48,19 +55,29 @@ the partial credit model using marginal maximum likelihood.</p>
 
     Args:
         dataset: [n_items, n_participants] 2d array of measured responses
-        max_iter: (optional) maximum number of iterations to perform
+        options: dictionary with updates to default options
 
     Returns:
-        array of discrimination parameters
-        2d array of difficulty parameters, (NAN represents non response)
+        discrimination: (1d array) estimates of item discrimination
+        difficulty: (2d array) estimates of item difficulties x item thresholds
+
+    Options:
+        * max_iteration: int
+        * distribution: callable
+        * quadrature_bounds: (float, float)
+        * quadrature_n: int
     &#34;&#34;&#34;
+    options = validate_estimation_options(options)
+    quad_start, quad_stop = options[&#39;quadrature_bounds&#39;]
+    quad_n = options[&#39;quadrature_n&#39;]
+
     responses, item_counts = condition_polytomous_response(dataset, trim_ends=False,
                                                            _reference=0.0)
     n_items = responses.shape[0]
 
     # Interpolation Locations
-    theta = _get_quadrature_points(61, -5, 5)
-    distribution = np.exp(-np.square(theta) / 2) / np.sqrt(2 * np.pi)
+    theta = _get_quadrature_points(quad_n, quad_start, quad_stop)
+    distribution = options[&#39;distribution&#39;](theta)
 
     # Initialize difficulty parameters for estimation
     betas = np.full((n_items, item_counts.max()), np.nan)
@@ -79,7 +96,7 @@ the partial credit model using marginal maximum likelihood.</p>
     # 3. Integrate of theta
     # 4. minimize and repeat
     #############
-    for iteration in range(max_iter):
+    for iteration in range(options[&#39;max_iteration&#39;]):
         previous_discrimination = discrimination.copy()
         previous_betas = betas.copy()
 
@@ -113,7 +130,7 @@ the partial credit model using marginal maximum likelihood.</p>
 
                 new_values *= partial_int
                 otpt = integrate.fixed_quad(
-                    lambda x: new_values, -5, 5, n=61)[0]
+                    lambda x: new_values, quad_start, quad_stop, n=quad_n)[0]
 
                 return -np.log(otpt).sum()
 
