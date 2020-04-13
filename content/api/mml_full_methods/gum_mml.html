@@ -1,7 +1,7 @@
 ---
-title: pcm_mml
-linkTitle: pcm_mml
-weight: 4
+title: gum_mml
+linkTitle: gum_mml
+weight: 5
 type: docs
 ---
 <head>
@@ -15,13 +15,13 @@ type: docs
 <section >
 
 <dl >
-<dt id="girth.mml_full_methods.pcm_mml" ><code class="name flex" >
-<span >def <span class="ident" >pcm_mml</span></span>(<span >dataset, options=None)</span>
+<dt id="girth.mml_full_methods.gum_mml" ><code class="name flex" >
+<span >def <span class="ident" >gum_mml</span></span>(<span >dataset, options=None)</span>
 </code></dt>
 <dd >
-<section class="desc" ><p >Estimate parameters for partial credit model.</p>
-<p >Estimate the discrimination and difficulty parameters for
-the partial credit model using marginal maximum likelihood.</p>
+<section class="desc" ><p >Estimate parameters for graded unfolding model.</p>
+<p >Estimate the discrimination, delta and threshold parameters for
+the graded unfolding model using marginal maximum likelihood.</p>
 <h2 id="args" >Args</h2>
 <dl >
 <dt ><strong ><code >dataset</code></strong></dt>
@@ -33,8 +33,10 @@ the partial credit model using marginal maximum likelihood.</p>
 <dl >
 <dt ><strong ><code >discrimination</code></strong></dt>
 <dd >(1d array) estimates of item discrimination</dd>
+<dt ><strong ><code >delta</code></strong></dt>
+<dd >(1d array) estimates of item folding values</dd>
 <dt ><strong ><code >difficulty</code></strong></dt>
-<dd >(2d array) estimates of item difficulties x item thresholds</dd>
+<dd >(2d array) estimates of item thresholds x item thresholds</dd>
 </dl>
 <h2 id="options" >Options</h2>
 <ul >
@@ -47,11 +49,11 @@ the partial credit model using marginal maximum likelihood.</p>
 <summary >
 <span >Expand source code</span>
 </summary>
-<pre ><code class="python" >def pcm_mml(dataset, options=None):
-    &#34;&#34;&#34;Estimate parameters for partial credit model.
+<pre ><code class="python" >def gum_mml(dataset, options=None):
+    &#34;&#34;&#34;Estimate parameters for graded unfolding model.
 
-    Estimate the discrimination and difficulty parameters for
-    the partial credit model using marginal maximum likelihood.
+    Estimate the discrimination, delta and threshold parameters for
+    the graded unfolding model using marginal maximum likelihood.
 
     Args:
         dataset: [n_items, n_participants] 2d array of measured responses
@@ -59,7 +61,8 @@ the partial credit model using marginal maximum likelihood.</p>
 
     Returns:
         discrimination: (1d array) estimates of item discrimination
-        difficulty: (2d array) estimates of item difficulties x item thresholds
+        delta: (1d array) estimates of item folding values
+        difficulty: (2d array) estimates of item thresholds x item thresholds
 
     Options:
         * max_iteration: int
@@ -79,16 +82,20 @@ the partial credit model using marginal maximum likelihood.</p>
     theta = _get_quadrature_points(quad_n, quad_start, quad_stop)
     distribution = options[&#39;distribution&#39;](theta)
 
-    # Initialize difficulty parameters for estimation
-    betas = np.full((n_items, item_counts.max()), np.nan)
+    # Initialize item parameters for iterations
     discrimination = np.ones((n_items,))
+    betas = np.full((n_items, item_counts.max() - 1), np.nan)
+    delta = np.zeros((n_items,))
     partial_int = np.ones((responses.shape[1], theta.size))
 
-    # Not all items need to have the same
-    # number of response categories
-    betas[:, 0] = 0
+    # Set initial estimates to evenly spaced
     for ndx in range(n_items):
-        betas[ndx, 1:item_counts[ndx]] = np.linspace(-1, 1, item_counts[ndx]-1)
+        item_length = item_counts[ndx] - 1
+        betas[ndx, :item_length] = np.linspace(-1, 1, item_length)
+
+    # This is the index associated with &#34;folding&#34; about the center
+    fold_span = ((item_counts[:, None] - 0.5) -
+                 np.arange(betas.shape[1] + 1)[None, :])
 
     #############
     # 1. Start the iteration loop
@@ -99,6 +106,7 @@ the partial credit model using marginal maximum likelihood.</p>
     for iteration in range(options[&#39;max_iteration&#39;]):
         previous_discrimination = discrimination.copy()
         previous_betas = betas.copy()
+        previous_delta = delta.copy()
 
         # Quadrature evaluation for values that do not change
         # This is done during the outer loop to address rounding errors
@@ -106,26 +114,30 @@ the partial credit model using marginal maximum likelihood.</p>
         partial_int *= 0.0
         partial_int += distribution[None, :]
         for item_ndx in range(n_items):
-            partial_int *= _credit_partial_integral(theta, betas[item_ndx],
+            partial_int *= _unfold_partial_integral(theta, delta[item_ndx],
+                                                    betas[item_ndx],
                                                     discrimination[item_ndx],
+                                                    fold_span[item_ndx],
                                                     responses[item_ndx])
 
         # Loop over each item and solve for the alpha / beta parameters
         for item_ndx in range(n_items):
             # pylint: disable=cell-var-from-loop
-            item_length = item_counts[item_ndx]
-            new_betas = np.zeros((item_length))
+            item_length = item_counts[item_ndx] - 1
 
             # Remove the previous output
-            old_values = _credit_partial_integral(theta, previous_betas[item_ndx],
+            old_values = _unfold_partial_integral(theta, previous_delta[item_ndx],
+                                                  previous_betas[item_ndx],
                                                   previous_discrimination[item_ndx],
+                                                  fold_span[item_ndx],
                                                   responses[item_ndx])
             partial_int /= old_values
 
             def _local_min_func(estimate):
-                new_betas[1:] = estimate[1:]
-                new_values = _credit_partial_integral(theta, new_betas,
-                                                      estimate[0],
+                new_betas = estimate[2:]
+                new_values = _unfold_partial_integral(theta, estimate[1],
+                                                      new_betas,
+                                                      estimate[0], fold_span[item_ndx],
                                                       responses[item_ndx])
 
                 new_values *= partial_int
@@ -136,17 +148,21 @@ the partial credit model using marginal maximum likelihood.</p>
 
             # Initial Guess of Item Parameters
             initial_guess = np.concatenate(([discrimination[item_ndx]],
-                                            betas[item_ndx, 1:item_length]))
+                                            [delta[item_ndx]],
+                                            betas[item_ndx]))
 
             otpt = fmin_slsqp(_local_min_func, initial_guess,
                               disp=False,
-                              bounds=[(.25, 4)] + [(-6, 6)] * (item_length - 1))
+                              bounds=[(.25, 4)] + [(-2, 2)] + [(-6, 6)] * item_length)
 
             discrimination[item_ndx] = otpt[0]
-            betas[item_ndx, 1:item_length] = otpt[1:]
+            delta[item_ndx] = otpt[1]
+            betas[item_ndx, :] = otpt[2:]
 
-            new_values = _credit_partial_integral(theta, betas[item_ndx],
+            new_values = _unfold_partial_integral(theta, delta[item_ndx],
+                                                  betas[item_ndx],
                                                   discrimination[item_ndx],
+                                                  fold_span[item_ndx],
                                                   responses[item_ndx])
 
             partial_int *= new_values
@@ -154,9 +170,7 @@ the partial credit model using marginal maximum likelihood.</p>
         if np.abs(previous_discrimination - discrimination).max() &lt; 1e-3:
             break
 
-    # TODO:  look where missing values are and place NAN there instead
-    # of appending them to the end
-    return discrimination, betas[:, 1:]</code></pre>
+    return discrimination, delta, betas</code></pre>
 </details>
 </dd>
 </dl>
