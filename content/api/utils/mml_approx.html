@@ -19,8 +19,9 @@ type: docs
 <span >def <span class="ident" >mml_approx</span></span>(<span >dataset, discrimination=1, scalar=None)</span>
 </code></dt>
 <dd >
-<section class="desc" ><p >Estimates the difficulty parameters of an IRT
-model assuming a normal distribution</p>
+<section class="desc" ><p >Difficulty parameter estimates of IRT model.</p>
+<p >Analytic estimates of the difficulty parameters
+in an IRT model assuming a normal distribution .</p>
 <h2 id="args" >Args</h2>
 <dl >
 <dt ><strong ><code >dataset</code></strong></dt>
@@ -28,29 +29,30 @@ model assuming a normal distribution</p>
 <dt ><strong ><code >discrimination</code></strong></dt>
 <dd >scalar of discrimination used in model (default to 1)</dd>
 <dt ><strong ><code >scalar</code></strong></dt>
-<dd >log(n_no / n_yes)</dd>
+<dd >(1d array) logarithm of "false counts" to "true counts" (log(n_no / n_yes))</dd>
 </dl>
 <h2 id="returns" >Returns</h2>
 <dl >
-<dt ><code >array</code> of <code >discrimination</code> <code >estimates</code></dt>
-<dd >&nbsp;</dd>
+<dt ><strong ><code >difficulty</code></strong></dt>
+<dd >(1d array) difficulty estimates</dd>
 </dl></section>
 <details class="source" >
 <summary >
 <span >Expand source code</span>
 </summary>
 <pre ><code class="python" >def mml_approx(dataset, discrimination=1, scalar=None):
-    &#34;&#34;&#34;
-        Estimates the difficulty parameters of an IRT
-        model assuming a normal distribution
+    &#34;&#34;&#34; Difficulty parameter estimates of IRT model.
+    
+    Analytic estimates of the difficulty parameters 
+    in an IRT model assuming a normal distribution .
 
-        Args:
-            dataset: [items x participants] matrix of True/False Values
-            discrimination: scalar of discrimination used in model (default to 1)
-            scalar: log(n_no / n_yes)
+    Args:
+        dataset: [items x participants] matrix of True/False Values
+        discrimination: scalar of discrimination used in model (default to 1)
+        scalar: (1d array) logarithm of &#34;false counts&#34; to &#34;true counts&#34; (log(n_no / n_yes))
 
-        Returns:
-            array of discrimination estimates
+    Returns:
+        difficulty: (1d array) difficulty estimates
     &#34;&#34;&#34;
     if scalar is None:
         n_no, n_yes = get_true_false_counts(dataset)

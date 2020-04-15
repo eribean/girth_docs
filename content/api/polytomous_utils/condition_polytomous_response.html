@@ -19,9 +19,8 @@ type: docs
 <span >def <span class="ident" >condition_polytomous_response</span></span>(<span >dataset, trim_ends=True)</span>
 </code></dt>
 <dd >
-<section class="desc" ><p >Transforms item responses for easier use during parameter
-estimation</p>
-<p >This takes an input array of ordinal values and converts it into
+<section class="desc" ><p >Recodes polytomous responses into linear indices.</p>
+<p >Takes an input array of ordinal values and converts it into
 an array of linear indices to access difficulty parameters through
 fancy indexing. </p>
 <h2 id="args" >Args</h2>
@@ -33,21 +32,19 @@ fancy indexing. </p>
 </dl>
 <h2 id="returns" >Returns</h2>
 <dl >
-<dt ><code >updated</code> <code >dataset</code> <code >array</code> <code >adjusted</code> <code >for</code> <code >linear</code> <code >indexing</code>,</dt>
-<dd >&nbsp;</dd>
-<dt ><code >vector</code> of <code >lengths</code> <code >associated</code> <code >with</code> <code >each</code> <code >item</code></dt>
-<dd >&nbsp;</dd>
+<dt ><strong ><code >dataset</code></strong></dt>
+<dd >(2d array) ordinal values converted to linear indices</dd>
+<dt ><strong ><code >beta_length</code></strong></dt>
+<dd >(1d array) number of unique values per item</dd>
 </dl></section>
 <details class="source" >
 <summary >
 <span >Expand source code</span>
 </summary>
 <pre ><code class="python" >def condition_polytomous_response(dataset, trim_ends=True, _reference=1.0):
-    &#34;&#34;&#34;
-    Transforms item responses for easier use during parameter
-    estimation
+    &#34;&#34;&#34; Recodes polytomous responses into linear indices.
 
-    This takes an input array of ordinal values and converts it into
+    Takes an input array of ordinal values and converts it into
     an array of linear indices to access difficulty parameters through 
     fancy indexing. 
 
@@ -56,8 +53,8 @@ fancy indexing. </p>
         trim_ends:  (boolean) trims responses that are either all no or all yes
 
     Returns:
-        updated dataset array adjusted for linear indexing, 
-        vector of lengths associated with each item
+        dataset: (2d array) ordinal values converted to linear indices
+        beta_length: (1d array) number of unique values per item
     &#34;&#34;&#34;
     # Remove all no / yes endorsements
     min_value, max_value = dataset.min(), dataset.max()

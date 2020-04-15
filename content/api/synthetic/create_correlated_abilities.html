@@ -20,17 +20,21 @@ type: docs
 </code></dt>
 <dd >
 <section class="desc" ><p >Creates correlated ability parameters based on an input correlation matrix.</p>
-<p >This is a helper function for use in synthesizing multi-dimensional data</p>
+<p >This is a helper function for use in synthesizing multi-dimensional data
+assuming multivariate normal distribution</p>
 <h2 id="args" >Args</h2>
 <dl >
 <dt ><strong ><code >correlation_matrix</code></strong></dt>
-<dd >[2D Array, NxN] Symmetric matrix defining
+<dd >(2d array) Symmetric matrix defining
 the correlation between the abilities</dd>
 <dt ><strong ><code >n_participants</code></strong></dt>
 <dd >number of participants to synthesize</dd>
 </dl>
 <h2 id="returns" >Returns</h2>
-<p >[N, n_participants] array of ability parameters</p></section>
+<dl >
+<dt ><strong ><code >abilities</code></strong></dt>
+<dd >(2d array) correlated abilities</dd>
+</dl></section>
 <details class="source" >
 <summary >
 <span >Expand source code</span>
@@ -38,15 +42,16 @@ the correlation between the abilities</dd>
 <pre ><code class="python" >def create_correlated_abilities(correlation_matrix, n_participants):
     &#34;&#34;&#34; Creates correlated ability parameters based on an input correlation matrix.
 
-        This is a helper function for use in synthesizing multi-dimensional data
-    
-        Args:
-            correlation_matrix: [2D Array, NxN] Symmetric matrix defining
-                                the correlation between the abilities
-            n_participants: number of participants to synthesize
+    This is a helper function for use in synthesizing multi-dimensional data
+    assuming multivariate normal distribution
 
-        Returns:
-            [N, n_participants] array of ability parameters
+    Args:
+        correlation_matrix: (2d array) Symmetric matrix defining
+                            the correlation between the abilities
+        n_participants: number of participants to synthesize
+
+    Returns:
+        abilities: (2d array) correlated abilities
     &#34;&#34;&#34;
     lower = np.linalg.cholesky(correlation_matrix)
 

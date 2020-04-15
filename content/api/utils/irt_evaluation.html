@@ -19,7 +19,8 @@ type: docs
 <span >def <span class="ident" >irt_evaluation</span></span>(<span >difficulty, discrimination, thetas)</span>
 </code></dt>
 <dd >
-<section class="desc" ><p >Evaluates an IRT model and returns the exact values.
+<section class="desc" ><p >Evaluation of unidimensional IRT model.</p>
+<p >Evaluates an IRT model and returns the exact values.
 This function
 supports only unidimemsional models</p>
 <p >Assumes the model
@@ -27,39 +28,37 @@ P(theta) = 1.0 / (1 + exp(discrimination * (theta - difficulty)))</p>
 <h2 id="args" >Args</h2>
 <dl >
 <dt ><strong ><code >difficulty</code></strong></dt>
-<dd >[array] of difficulty parameters</dd>
+<dd >(1d array) item difficulty parameters</dd>
 <dt ><strong ><code >discrimination</code></strong></dt>
-<dd >[array | number] of discrimination parameters</dd>
+<dd >(1d array | number) item discrimination parameters</dd>
 <dt ><strong ><code >thetas</code></strong></dt>
-<dd >[array] of person abilities</dd>
+<dd >(1d array) person abilities</dd>
 </dl>
 <h2 id="returns" >Returns</h2>
 <dl >
-<dt ><code >dichotomous</code> <code >matrix</code> of [<code >difficulty.size</code> <code >x</code> <code >thetas.size</code>] <code >representing</code></dt>
-<dd >&nbsp;</dd>
-<dt ><code >synthetic</code> <code >data</code></dt>
-<dd >&nbsp;</dd>
+<dt ><strong ><code >probabilities</code></strong></dt>
+<dd >(2d array) evaluation of sigmoid for given inputs</dd>
 </dl></section>
 <details class="source" >
 <summary >
 <span >Expand source code</span>
 </summary>
 <pre ><code class="python" >def irt_evaluation(difficulty, discrimination, thetas):
-    &#34;&#34;&#34;
-        Evaluates an IRT model and returns the exact values.  This function
-        supports only unidimemsional models
+    &#34;&#34;&#34; Evaluation of unidimensional IRT model.
 
-        Assumes the model
-            P(theta) = 1.0 / (1 + exp(discrimination * (theta - difficulty)))
+    Evaluates an IRT model and returns the exact values.  This function
+    supports only unidimemsional models
 
-        Args:
-            difficulty: [array] of difficulty parameters
-            discrimination:  [array | number] of discrimination parameters
-            thetas: [array] of person abilities
+    Assumes the model
+        P(theta) = 1.0 / (1 + exp(discrimination * (theta - difficulty)))
 
-        Returns:
-            dichotomous matrix of [difficulty.size x thetas.size] representing
-            synthetic data
+    Args:
+        difficulty: (1d array) item difficulty parameters
+        discrimination:  (1d array | number) item discrimination parameters
+        thetas: (1d array) person abilities
+
+    Returns:
+        probabilities: (2d array) evaluation of sigmoid for given inputs
     &#34;&#34;&#34;
     # If discrimination is a scalar, make it an array
     if np.atleast_1d(discrimination).size == 1:

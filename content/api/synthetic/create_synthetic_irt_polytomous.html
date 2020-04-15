@@ -19,10 +19,8 @@ type: docs
 <span >def <span class="ident" >create_synthetic_irt_polytomous</span></span>(<span >difficulty, discrimination, thetas, model='grm', seed=None)</span>
 </code></dt>
 <dd >
-<section class="desc" ><p >Creates synthetic IRT data to test parameters estimation
-functions.
-Creates polytomous output with specified number
-of levels from [1, levels]</p>
+<section class="desc" ><p >Creates polytomous unidimensional synthetic IRT data.</p>
+<p >Creates polytomous output with specified number of levels from [1, levels]</p>
 <h2 id="args" >Args</h2>
 <dl >
 <dt ><strong ><code >difficulty</code></strong></dt>
@@ -41,10 +39,8 @@ of levels from [1, levels]</p>
 </dl>
 <h2 id="returns" >Returns</h2>
 <dl >
-<dt ><code >dichotomous</code> <code >matrix</code> of [<code >difficulty.size</code> <code >x</code> <code >thetas.size</code>] <code >representing</code></dt>
-<dd >&nbsp;</dd>
-<dt ><code >synthetic</code> <code >data</code></dt>
-<dd >&nbsp;</dd>
+<dt ><strong ><code >synthetic_data</code></strong></dt>
+<dd >(2d array) realization of possible response given parameters</dd>
 </dl></section>
 <details class="source" >
 <summary >
@@ -52,24 +48,22 @@ of levels from [1, levels]</p>
 </summary>
 <pre ><code class="python" >def create_synthetic_irt_polytomous(difficulty, discrimination, thetas,
                                     model=&#39;grm&#39;, seed=None):
-    &#34;&#34;&#34;
-        Creates synthetic IRT data to test parameters estimation
-        functions.  Creates polytomous output with specified number
-        of levels from [1, levels]
+    &#34;&#34;&#34; Creates polytomous unidimensional synthetic IRT data.
 
-        Args:
-            difficulty: [2D array (items x n_levels-1)] of difficulty parameters
-            discrimination:  [array | number] of discrimination parameters
-            thetas: [array] of person abilities
-            model: [&#34;grm&#34;, &#34;pcm&#34;, &#34;gum&#34;] string specifying which polytomous model to use
-                    &#39;grm&#39;: Graded Response Model
-                    &#39;pcm&#39;: Generalized Partial Credit Model
-                    &#39;gum&#39;: Generalized Graded Unfolding Model
-            seed: Optional setting to reproduce results
+    Creates polytomous output with specified number of levels from [1, levels]
 
-        Returns:
-            dichotomous matrix of [difficulty.size x thetas.size] representing
-            synthetic data
+    Args:
+        difficulty: [2D array (items x n_levels-1)] of difficulty parameters
+        discrimination:  [array | number] of discrimination parameters
+        thetas: [array] of person abilities
+        model: [&#34;grm&#34;, &#34;pcm&#34;, &#34;gum&#34;] string specifying which polytomous model to use
+                &#39;grm&#39;: Graded Response Model
+                &#39;pcm&#39;: Generalized Partial Credit Model
+                &#39;gum&#39;: Generalized Graded Unfolding Model
+        seed: Optional setting to reproduce results
+
+    Returns:
+        synthetic_data: (2d array) realization of possible response given parameters
     &#34;&#34;&#34;
     difficulty = np.atleast_2d(difficulty)
     n_items, n_levels = difficulty.shape
@@ -79,42 +73,43 @@ of levels from [1, levels]</p>
 
     if seed:
         np.random.seed(seed)
-    
+
     # Check for single input of discrimination
     if np.atleast_1d(discrimination).size == 1:
         discrimination = np.full((n_items,), discrimination)
 
     # Get the model to use, will throw error if not supported
-    probability_func = {&#39;grm&#39;: _graded_func, 
+    probability_func = {&#39;grm&#39;: _graded_func,
                         &#39;pcm&#39;: _credit_func,
-                        &#39;gum&#39;: _unfold_func}[model.lower()]        
+                        &#39;gum&#39;: _unfold_func}[model.lower()]
 
     # Check difficulty parameters for validity
     clip_high = _check_difficulty_parameters(difficulty, model.lower())
 
-    # Initialize output for memory concerns        
+    # Initialize output for memory concerns
     level_scratch = np.zeros((n_levels + 2, thetas.size))
     output = np.zeros((n_items, thetas.size), dtype=&#39;int&#39;)
-    
+
     # Loop over items and compute probability estimates
-    # for each of the levels and assign level based on 
+    # for each of the levels and assign level based on
     # those probabilities
     for item_ndx in range(n_items):
         # Obtain the probabilities for the data (in-place)
-        probability_func(difficulty[item_ndx], discrimination[item_ndx], 
+        probability_func(difficulty[item_ndx], discrimination[item_ndx],
                          thetas, level_scratch[1:, :])
 
         # Get the thresholds of the levels
         np.cumsum(level_scratch[1:, :], axis=0, out=level_scratch[1:, :])
         level_scratch[0] = np.random.rand(thetas.size)
-        
+
         # Discritize the outputs based on the thresholds
-        output[item_ndx] = np.apply_along_axis(_my_digitize, axis=0, arr=level_scratch)
-    
+        output[item_ndx] = np.apply_along_axis(
+            _my_digitize, axis=0, arr=level_scratch)
+
     # Add 1 to return [1, n_levels]
     output += 1
-    np.clip(output, 0, clip_high, out=output)
-    return output    </code></pre>
+    np.clip(output, 1, clip_high, out=output)
+    return output</code></pre>
 </details>
 </dd>
 </dl>

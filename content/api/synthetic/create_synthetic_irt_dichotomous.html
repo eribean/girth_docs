@@ -19,8 +19,8 @@ type: docs
 <span >def <span class="ident" >create_synthetic_irt_dichotomous</span></span>(<span >difficulty, discrimination, thetas, guessing=0, seed=None)</span>
 </code></dt>
 <dd >
-<section class="desc" ><p >Creates synthetic IRT data to test parameters estimation
-functions.
+<section class="desc" ><p >Creates dichotomous unidimensional synthetic IRT data.</p>
+<p >Creates synthetic IRT data to test parameters estimation functions.<br />
 Only for use with dichotomous outputs</p>
 <p >Assumes the model
 P(theta) = 1.0 / (1 + exp(discrimination * (theta - difficulty)))</p>
@@ -39,10 +39,8 @@ P(theta) = 1.0 / (1 + exp(discrimination * (theta - difficulty)))</p>
 </dl>
 <h2 id="returns" >Returns</h2>
 <dl >
-<dt ><code >dichotomous</code> <code >matrix</code> of [<code >difficulty.size</code> <code >x</code> <code >thetas.size</code>] <code >representing</code></dt>
-<dd >&nbsp;</dd>
-<dt ><code >synthetic</code> <code >data</code></dt>
-<dd >&nbsp;</dd>
+<dt ><strong ><code >synthetic_data</code></strong></dt>
+<dd >(2d array) realization of possible response given parameters</dd>
 </dl></section>
 <details class="source" >
 <summary >
@@ -50,23 +48,24 @@ P(theta) = 1.0 / (1 + exp(discrimination * (theta - difficulty)))</p>
 </summary>
 <pre ><code class="python" >def create_synthetic_irt_dichotomous(difficulty, discrimination, thetas,
                                      guessing=0, seed=None):
-    &#34;&#34;&#34;
-        Creates synthetic IRT data to test parameters estimation
-        functions.  Only for use with dichotomous outputs
+    &#34;&#34;&#34; Creates dichotomous unidimensional synthetic IRT data.
 
-        Assumes the model
-            P(theta) = 1.0 / (1 + exp(discrimination * (theta - difficulty)))
+    Creates synthetic IRT data to test parameters estimation functions.  
+    Only for use with dichotomous outputs
 
-        Args:
-            difficulty: [array] of difficulty parameters
-            discrimination:  [array | number] of discrimination parameters
-            thetas: [array] of person abilities
-            guessing: [array | number] of guessing parameters associated with items
-            seed: Optional setting to reproduce results
+    Assumes the model
+        P(theta) = 1.0 / (1 + exp(discrimination * (theta - difficulty)))
 
-        Returns:
-            dichotomous matrix of [difficulty.size x thetas.size] representing
-            synthetic data
+    Args:
+        difficulty: [array] of difficulty parameters
+        discrimination:  [array | number] of discrimination parameters
+        thetas: [array] of person abilities
+        guessing: [array | number] of guessing parameters associated with items
+        seed: Optional setting to reproduce results
+
+    Returns:
+        synthetic_data: (2d array) realization of possible response given parameters
+
     &#34;&#34;&#34;
     if seed:
         np.random.seed(seed)

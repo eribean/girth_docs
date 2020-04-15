@@ -33,17 +33,17 @@ ignored</p>
 </dl>
 <h2 id="returns" >Returns</h2>
 <dl >
-<dt ><code >1d</code> <code >array</code> of <code >'false'</code> <code >counts</code> <code >per</code> <code >item</code>,</dt>
-<dd >&nbsp;</dd>
-<dt ><code >1d</code> <code >array</code> of <code >'true'</code> <code >counts</code> <code >per</code> <code >item</code></dt>
-<dd >&nbsp;</dd>
+<dt ><strong ><code >n_false</code></strong></dt>
+<dd >(1d array) "false" counts per item</dd>
+<dt ><strong ><code >n_true</code></strong></dt>
+<dd >(1d array) "true" counts per item</dd>
 </dl></section>
 <details class="source" >
 <summary >
 <span >Expand source code</span>
 </summary>
 <pre ><code class="python" >def get_true_false_counts(responses):
-    &#34;&#34;&#34;Returns the number of true and false for each item.
+    &#34;&#34;&#34; Returns the number of true and false for each item.
 
     Takes in a responses array and returns counts associated with
     true / false.  True is a value in the dataset which equals &#39;1&#39;
@@ -54,8 +54,8 @@ ignored</p>
         responses: [n_items x n_participants] array of response values
 
     Returns:
-        1d array of &#39;false&#39; counts per item,
-        1d array of &#39;true&#39; counts per item
+        n_false: (1d array) &#34;false&#34; counts per item
+        n_true: (1d array) &#34;true&#34; counts per item
     &#34;&#34;&#34;
     n_false = np.count_nonzero(responses == 0, axis=1)
     n_true = np.count_nonzero(responses == 1, axis=1)

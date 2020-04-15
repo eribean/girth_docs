@@ -30,24 +30,26 @@ numpy.unique</dd>
 </dl>
 <h2 id="returns" >Returns</h2>
 <dl >
-<dt ><code >response_set</code>, <code >counts</code> <code >updated</code> <code >to</code> <code >reflect</code> <code >removal</code> of <code >response</code> <code >patterns</code></dt>
-<dd >&nbsp;</dd>
+<dt ><strong ><code >response_set</code></strong></dt>
+<dd >updated response set with removal of undesired response patterns</dd>
+<dt ><strong ><code >counts</code></strong></dt>
+<dd >updated counts to account for removal</dd>
 </dl></section>
 <details class="source" >
 <summary >
 <span >Expand source code</span>
 </summary>
 <pre ><code class="python" >def trim_response_set_and_counts(response_sets, counts):
-    &#34;&#34;&#34;
-        Trims all true or all false responses from the response set/counts.
+    &#34;&#34;&#34; Trims all true or all false responses from the response set/counts.
 
-        Args:
-            response_set:  (2D array) response set by persons obtained by running
-                            numpy.unique
-            counts:  counts associated with response set
+    Args:
+        response_set:  (2D array) response set by persons obtained by running
+                        numpy.unique
+        counts:  counts associated with response set
 
-        Returns:
-            response_set, counts updated to reflect removal of response patterns
+    Returns:
+        response_set: updated response set with removal of undesired response patterns
+        counts: updated counts to account for removal
     &#34;&#34;&#34;
     # Remove response sets where output is all true/false
     mask = ~(np.nanvar(response_sets, axis=0) == 0)
